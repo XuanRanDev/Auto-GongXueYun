@@ -12,25 +12,22 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 
 import MessagePush
+import Constant
 
 pwd = os.path.dirname(os.path.abspath(__file__)) + os.sep
 
 # 设置重连次数
 requests.adapters.DEFAULT_RETRIES = 5
 
+headers = {}
 
-def get_plan_id(user, token: str, sign: str):
+
+def getPlanId(user, token: str, sign: str):
     url = "https://api.moguding.net:9000/practice/plan/v3/getPlanByStu"
     data = {
         "state": ""
     }
-    headers2 = {
-        'roleKey': 'student',
-        "authorization": token,
-        "sign": sign,
-        "content-type": "application/json; charset=UTF-8",
-        "user-agent": getUserAgent(user)
-    }
+    headers["sign"] = sign
     res = requests.post(url=url, data=json.dumps(data), headers=headers2)
     return res.json()["data"][0]["planId"]
 
@@ -38,14 +35,14 @@ def get_plan_id(user, token: str, sign: str):
 def getUserAgent(user):
     if user["user-agent"] != 'null':
         return user["user-agent"]
-    user["user-agent"] = random.choice(
-        ['Mozilla/5.0 (Linux; U; Android 9; zh-cn; Redmi Note 5 Build/PKQ1.180904.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/71.0.3578.141 Mobile Safari/537.36 XiaoMi/MiuiBrowser/11.10.8',
-         'Mozilla/5.0 (Linux; Android 9; MI 6 Build/PKQ1.190118.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/76.0.3809.89 Mobile Safari/537.36 T7/11.20 SP-engine/2.16.0 baiduboxapp/11.20.2.3 (Baidu; P1 9)',
-         'Mozilla/5.0 (Linux; Android 10; EVR-AL00 Build/HUAWEIEVR-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.186 Mobile Safari/537.36 baiduboxapp/11.0.5.12 (Baidu; P1 10)',
-         'Mozilla/5.0 (Linux; Android 9; JKM-AL00b Build/HUAWEIJKM-AL00b; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/66.0.3359.126 MQQBrowser/6.2 TBS/045130 Mobile Safari/537.36 MMWEBID/8951 MicroMessenger/7.0.12.1620(0x27000C36) Process/tools NetType/4G Language/zh_CN ABI/arm64',
-         'Mozilla/5.0 (Linux; Android 8.1.0; PBAM00 Build/OPM1.171019.026; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/76.0.3809.89 Mobile Safari/537.36 T7/11.20 SP-engine/2.16.0 baiduboxapp/11.20.0.14 (Baidu; P1 8.1.0) NABar/2.0',
-         'Mozilla/5.0 (Linux; Android 10; LIO-AN00 Build/HUAWEILIO-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/67.0.3396.87 XWEB/1170 MMWEBSDK/200201 Mobile Safari/537.36 MMWEBID/3371 MicroMessenger/7.0.12.1620(0x27000C36) Process/toolsmp NetType/4G Language/zh_CN ABI/arm64'])
-    return user["user-agent"]
+    return random.choice([
+        'Mozilla/5.0 (Linux; U; Android 9; zh-cn; Redmi Note 5 Build/PKQ1.180904.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/71.0.3578.141 Mobile Safari/537.36 XiaoMi/MiuiBrowser/11.10.8',
+        'Mozilla/5.0 (Linux; Android 9; MI 6 Build/PKQ1.190118.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/76.0.3809.89 Mobile Safari/537.36 T7/11.20 SP-engine/2.16.0 baiduboxapp/11.20.2.3 (Baidu; P1 9)',
+        'Mozilla/5.0 (Linux; Android 10; EVR-AL00 Build/HUAWEIEVR-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.186 Mobile Safari/537.36 baiduboxapp/11.0.5.12 (Baidu; P1 10)',
+        'Mozilla/5.0 (Linux; Android 9; JKM-AL00b Build/HUAWEIJKM-AL00b; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/66.0.3359.126 MQQBrowser/6.2 TBS/045130 Mobile Safari/537.36 MMWEBID/8951 MicroMessenger/7.0.12.1620(0x27000C36) Process/tools NetType/4G Language/zh_CN ABI/arm64',
+        'Mozilla/5.0 (Linux; Android 8.1.0; PBAM00 Build/OPM1.171019.026; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/76.0.3809.89 Mobile Safari/537.36 T7/11.20 SP-engine/2.16.0 baiduboxapp/11.20.0.14 (Baidu; P1 8.1.0) NABar/2.0',
+        'Mozilla/5.0 (Linux; Android 10; LIO-AN00 Build/HUAWEILIO-AN00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/67.0.3396.87 XWEB/1170 MMWEBSDK/200201 Mobile Safari/537.36 MMWEBID/3371 MicroMessenger/7.0.12.1620(0x27000C36) Process/toolsmp NetType/4G Language/zh_CN ABI/arm64'
+    ])
 
 
 def getSign2(text: str):
@@ -56,12 +53,12 @@ def getSign2(text: str):
 def parseUserInfo():
     allUser = ''
     if os.path.exists(pwd + "user.json"):
+        print(Constant.findUserJsonFile)
         with open(pwd + "user.json", encoding="utf-8") as f:
             lines = f.readlines()
             for line in lines:
                 allUser = allUser + line + '\n'
     else:
-        print("未找到配置文件,将从系统环境变量中读取信息！")
         return json.loads(os.environ.get("USERS", ""))
     return json.loads(allUser)
 
@@ -70,13 +67,7 @@ def save(user, userId: str, token: str, planId: str, country: str, province: str
          address: str, signType: str = "START", description: str = "",
          device: str = "Android", latitude: str = None, longitude: str = None):
     text = device + signType + planId + userId + f"{country}{province}{address}"
-    headers2 = {
-        'roleKey': 'student',
-        "user-agent": getUserAgent(user),
-        "sign": getSign2(text=text),
-        "authorization": token,
-        "content-type": "application/json; charset=UTF-8"
-    }
+    headers["sign"] = getSign2(text=text)
     data = {
         "country": country,
         "address": f"{country}{province}{address}",
@@ -90,7 +81,7 @@ def save(user, userId: str, token: str, planId: str, country: str, province: str
         "longitude": longitude
     }
     url = "https://api.moguding.net:9000/attendence/clock/v2/save"
-    res = requests.post(url=url, headers=headers2, data=json.dumps(data))
+    res = requests.post(url=url, headers=headers, data=json.dumps(data))
     return res.json()["code"] == 200, res.json()["msg"]
 
 
@@ -112,27 +103,21 @@ def getToken(user):
         "loginType": user["type"],
         "uuid": ""
     }
-    headers2 = {
-        "content-type": "application/json; charset=UTF-8",
-        "user-agent": getUserAgent(user)
-    }
-    res = requests.post(url=url, data=json.dumps(data), headers=headers2)
+    res = requests.post(url=url, data=json.dumps(data), headers=headers)
     return res.json()
 
 
 def useUserTokenSign(user):
+    headers["authorization"] = user["token"]
     phone = user["phone"]
     token = user["token"]
     userId = user["userId"]
     planId = user["planId"]
     signStatus = startSign(userId, token, planId, user, startType=0)
     if signStatus:
-        print('警告：保持登录失败，Token失效，请及时更新Token')
-        print('重试：正在准备使用账户密码重新签到')
-        MessagePush.pushMessage(phone, '工学云设备Token失效',
-                                '工学云自动打卡设备Token失效，本次将使用账号密码重新登录签到，请及时更新配置文件中的Token' +
-                                ',如不再需要保持登录状态,请及时将配置文件中的keepLogin更改为False取消保持登录打卡，如有疑问请联系邮箱：XuanRanDev@qq.com'
-                                , user["pushKey"])
+        print(Constant.tokenSignWarning)
+        print(Constant.tokenSignRetry)
+        MessagePush.pushMessage(phone, Constant.tokenSignError, Constant.tokenSignErrorDesc, user["pushKey"])
         prepareSign(user, keepLogin=False)
 
 
@@ -142,7 +127,6 @@ def prepareSign(user, keepLogin=True):
 
     if user["keepLogin"] and keepLogin:
         # 启用了保持登录状态，则使用设备Token登录
-        print('用户启用了保持登录，准备使用设备Token登录')
         useUserTokenSign(user)
         return
 
@@ -150,9 +134,9 @@ def prepareSign(user, keepLogin=True):
     phone = user["phone"]
 
     if userInfo["code"] != 200:
-        print('打卡失败，错误原因:' + userInfo["msg"])
-        MessagePush.pushMessage(phone, '工学云打卡失败！',
-                                '用户：' + phone + ',' + '打卡失败！错误原因：' + userInfo["msg"],
+        print(Constant.signError + userInfo["msg"])
+        MessagePush.pushMessage(phone, Constant.signErrorNotifyTitle,
+                                '用户：' + phone + ',' + Constant.signError + userInfo["msg"],
                                 user["pushKey"])
         return
 
@@ -160,7 +144,7 @@ def prepareSign(user, keepLogin=True):
     token = userInfo["data"]["token"]
 
     sign = getSign2(userId + 'student')
-    planId = get_plan_id(user, token, sign)
+    planId = getPlanId(user, token, sign)
     startSign(userId, token, planId, user, startType=1)
 
 
@@ -173,7 +157,7 @@ def startSign(userId, token, planId, user, startType):
     else:
         signType = 'END'
     phone = user["phone"]
-    print('-------------准备签到--------------')
+    print(Constant.prepareSign)
 
     latitude = user["latitude"]
     longitude = user["longitude"]
@@ -186,11 +170,11 @@ def startSign(userId, token, planId, user, startType):
                          signType=signType, description='', device=user['type'],
                          latitude=latitude, longitude=longitude)
     if signResp:
-        print('签到成功')
+        print(Constant.signOK)
     else:
-        print('签到失败')
+        print(Constant.signNo)
         if not startType:
-            print('-------------签到完成--------------')
+            print()
             return True
 
     ######################################
@@ -218,7 +202,7 @@ def startSign(userId, token, planId, user, startType):
     # 消息推送处理完毕
     #####################################
 
-    print('-------------签到完成--------------')
+    print(Constant.signFinish)
 
 
 def signCheck(users):
@@ -229,27 +213,17 @@ def signCheck(users):
         print()
         url = "https://api.moguding.net:9000/attendence/clock/v1/listSynchro"
         if user["keepLogin"]:
-            print('          此用户保持登录状态开启，准备使用Token查询          ')
-            token = user["token"]
+            headers["authorization"] = user["token"]
         else:
-            print('            此用户保持登录状态关闭，准备登录账号          ')
-            token = getToken(user)["data"]["token"]
-        header = {
-            "accept-encoding": "gzip",
-            "content-type": "application/json;charset=UTF-8",
-            "rolekey": "student",
-            "host": "api.moguding.net:9000",
-            "authorization": token,
-            "user-agent": getUserAgent(user)
-        }
+            headers["authorization"] = getToken(user)["data"]["token"]
         t = str(int(time.time() * 1000))
         data = {
             "t": encrypt("23DbtQHR2UMbH6mJ", t)
         }
-        res = requests.post(url=url, headers=header, data=json.dumps(data))
+        res = requests.post(url=url, headers=headers, data=json.dumps(data))
 
         if res.json()["msg"] != 'success':
-            print('            获取用户打卡记录失败          ')
+            print(Constant.signCheckError2)
             continue
 
         lastSignInfo = res.json()["data"][0]
@@ -258,35 +232,54 @@ def signCheck(users):
         hourNow = datetime.datetime.now(pytz.timezone('PRC')).hour
         nowDate = str(datetime.datetime.now(pytz.timezone('PRC')))[0:10]
         if hourNow <= 12 and lastSignType == 'END' and lastSignDate != nowDate:
-            print('            今日未打上班卡，准备补签          ')
+            print(Constant.signCheckRetroactiveStart)
             prepareSign(user)
         if hourNow >= 23 and lastSignType == 'START' and lastSignDate == nowDate:
-            print('            今日未打下班卡，准备补签          ')
+            print(Constant.signCheckRetroactiveEnd)
             prepareSign(user)
-        print('        Tips：如果没提示上班或者下班补签即代表上次打卡正常          ')
+        print(Constant.signCheckTips3)
         continue
 
 
+def resetHeaders(user):
+    global headers
+    headers = {
+        "roleKey": "student",
+        "authorization": "",
+        "sign": "",
+        "content-type": "application/json; charset=UTF-8",
+        "host": "api.moguding.net:9000",
+        "user-agent": getUserAgent(user)
+    }
+
+
 if __name__ == '__main__':
-    users = parseUserInfo()
+    try:
+        users = parseUserInfo()
+    except Exception as e:
+        print(Constant.parseConfigError)
+        sys.exit(0)
+
     hourNow = datetime.datetime.now(pytz.timezone('PRC')).hour
     if hourNow == 11 or hourNow == 23:
-        print('----------------------------每日签到检查开始-----------------------------')
-        print('          每日11点以及23点为打卡检查，此时间段内自动打卡不会运行          ')
+        print(Constant.signCheckStartTips)
+        print(Constant.signCheckStartDesc)
         try:
             signCheck(users)
         except Exception as e:
-            print('每日签到检查运行错误！可能与服务器建立连接失败,具体错误原因：' + str(e))
-        print('----------------------------每日签到检查完成-----------------------------')
+            print(Constant.parseConfigError + str(e))
+        print(Constant.signCheckEndTips)
         sys.exit()
+
     for user in users:
-        try:
-            prepareSign(user)
-        except Exception as e:
-            print('工学云打卡失败，错误原因：' + str(e))
-            MessagePush.pushMessage(user["phone"], '工学云打卡失败',
-                                    '工学云打卡失败, 可能是连接工学云服务器超时,但请别担心，' +
-                                    '中午11点以及晚上23点，我们会进行打卡检查，' +
-                                    '如未打卡则会自动补签（在打卡检查启用的情况下）。\n\n\n' +
-                                    '具体错误信息：' + str(e)
-                                    , user["pushKey"])
+        resetHeaders(user)
+        # try:
+        #     prepareSign(user)
+        # except Exception as e:
+        #     print('工学云打卡失败，错误原因：' + str(e))
+        #     MessagePush.pushMessage(user["phone"], '工学云打卡失败',
+        #                             '工学云打卡失败, 可能是连接工学云服务器超时,但请别担心，' +
+        #                             '中午11点以及晚上23点，我们会进行打卡检查，' +
+        #                             '如未打卡则会自动补签（在打卡检查启用的情况下）。\n\n\n' +
+        #                             '具体错误信息：' + str(e)
+        #                             , user["pushKey"])
