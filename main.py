@@ -273,6 +273,7 @@ if __name__ == '__main__':
 
     for user in users:
         resetHeaders(user)
+        #TODO 取消注释
         # try:
         #     prepareSign(user)
         # except Exception as e:
