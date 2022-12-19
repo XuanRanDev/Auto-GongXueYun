@@ -3,9 +3,9 @@ name: "Sign"
 on:
   workflow_dispatch:
   schedule:
-    - cron: "00 23 * * *" # 上班卡
+    - cron: "00 01 * * *" # 上班卡
     - cron: "15 03 * * *" # 每日签到检查，如不需要可删除这行
-    - cron: "00 10 * * *" # 下班卡
+    - cron: "00 13 * * *" # 下班卡
     - cron: "15 15 * * *" # 每日签到检查，如不需要可删除这行
 
 jobs:
