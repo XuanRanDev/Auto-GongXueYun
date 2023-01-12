@@ -1,8 +1,24 @@
-from datetime import tzinfo,timedelta
+from datetime import tzinfo, timedelta
+
+import requests
+
+
+class MessagePush:
+    # PushPlus
+    @staticmethod
+    def pushMessage(title, content, token):
+        url = 'http://www.pushplus.plus/send?token=' + token + '&title=' + title + '&content=' + content + '&template=html'
+        resp = requests.post(url)
+        if resp.json()["code"] == 200:
+            print('推送消息提醒成功！')
+        else:
+            print('推送消息提醒失败！')
+
 
 class UTC(tzinfo):
     """UTC"""
-    def __init__(self,offset = 0):
+
+    def __init__(self, offset=0):
         self._offset = offset
 
     def utcoffset(self, dt):
@@ -13,7 +29,7 @@ class UTC(tzinfo):
 
     def dst(self, dt):
         return timedelta(hours=self._offset)
-    
+
     def timezone(str):
         if str == 'UTC':
             return UTC()
@@ -21,7 +37,7 @@ class UTC(tzinfo):
             return UTC(8)
         else:
             return None
-    
+
 
 SBox = [0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B,
         0xFE, 0xD7, 0xAB, 0x76, 0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0,

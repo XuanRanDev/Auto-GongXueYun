@@ -2,15 +2,12 @@ import datetime
 import json
 import os
 import random
-import sys
 import time
 from hashlib import md5
 
-
 import requests
-from utils import AES,UTC as pytz
 
-import MessagePush
+from utils import AES, UTC as pytz, MessagePush
 
 pwd = os.path.dirname(os.path.abspath(__file__)) + os.sep
 
@@ -128,7 +125,7 @@ def useUserTokenSign(user):
     if signStatus:
         print('警告：保持登录失败，Token失效，请及时更新Token')
         print('重试：正在准备使用账户密码重新签到')
-        MessagePush.pushMessage(phone, '工学云设备Token失效',
+        MessagePush.pushMessage('工学云设备Token失效',
                                 '工学云自动打卡设备Token失效，本次将使用账号密码重新登录签到，请及时更新配置文件中的Token' +
                                 ',如不再需要保持登录状态,请及时将配置文件中的keepLogin更改为False取消保持登录打卡，如有疑问请联系邮箱：XuanRanDev@qq.com'
                                 , user["pushKey"])
@@ -150,7 +147,7 @@ def prepareSign(user, keepLogin=True):
 
     if userInfo["code"] != 200:
         print('打卡失败，错误原因:' + userInfo["msg"])
-        MessagePush.pushMessage(phone, '工学云打卡失败！',
+        MessagePush.pushMessage('工学云打卡失败！',
                                 '用户：' + phone + ',' + '打卡失败！错误原因：' + userInfo["msg"],
                                 user["pushKey"])
         return
@@ -210,7 +207,7 @@ def startSign(userId, token, planId, user, startType):
 
     # 推送消息内容构建
 
-    MessagePush.pushMessage(phone, '工学云' + pushSignType + signStatus + pushSignIsOK,
+    MessagePush.pushMessage('工学云' + pushSignType + signStatus + pushSignIsOK,
                             '用户：' + phone + '，工学云' + pushSignType + signStatus + pushSignIsOK
                             , user["pushKey"])
 
@@ -283,9 +280,13 @@ if __name__ == '__main__':
             prepareSign(user)
         except Exception as e:
             print('工学云打卡失败，错误原因：' + str(e))
-            MessagePush.pushMessage(user["phone"], '工学云打卡失败',
-                                    '工学云打卡失败, 可能是连接工学云服务器超时,但请别担心，' +
+            isNetworkError = 'HTTPSConnectionPool' in str(e)
+            m = '原因请查看下方错误信息，'
+            if isNetworkError:
+                m = '连接工学云服务器失败！'
+            MessagePush.pushMessage('工学云打卡失败',
+                                    '工学云打卡失败, ' + m + '但请别担心，' +
                                     '中午11点以及晚上23点，我们会进行打卡检查，' +
-                                    '如未打卡则会自动补签（在打卡检查启用的情况下）。\n\n\n' +
-                                    '具体错误信息：' + str(e)
+                                    '如未打卡则会自动补签（在打卡检查启用的情况下）。' +
+                                    '\n\n\n具体错误信息：' + str(e)
                                     , user["pushKey"])
